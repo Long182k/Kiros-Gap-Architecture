@@ -19,7 +19,7 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     networks:
-      - gapanalyzer-network
+      - gapanalyzer_gapanalyzer-network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.prometheus.rule=Host(`prometheus.${DOMAIN:-localhost}`)"
@@ -40,7 +40,7 @@ services:
       - ./monitoring/loki-config.yml:/etc/loki/loki-config.yml:ro
       - loki_data:/loki
     networks:
-      - gapanalyzer-network
+      - gapanalyzer_gapanalyzer-network
 
   promtail:
     image: grafana/promtail:3.0.0
@@ -54,7 +54,7 @@ services:
     depends_on:
       - loki
     networks:
-      - gapanalyzer-network
+      - gapanalyzer_gapanalyzer-network
 
   # ============================================
   # Dashboards
@@ -78,7 +78,7 @@ services:
       - prometheus
       - loki
     networks:
-      - gapanalyzer-network
+      - gapanalyzer_gapanalyzer-network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN:-localhost}`)"
@@ -91,7 +91,7 @@ services:
 # ============================================
 
 networks:
-  gapanalyzer-network:
+  gapanalyzer_gapanalyzer-network:
     external: true
 
 volumes:
