@@ -3,6 +3,7 @@
  */
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import logger from '../utils/logger.js';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -63,12 +64,12 @@ export function errorHandler(
 ): void {
   // Log error (but not in test environment)
   if (process.env.NODE_ENV !== 'test') {
-    console.error('Error:', {
+    logger.error('Request error', {
       message: err.message,
       code: err.code,
-      stack: err.stack,
       path: req.path,
-      method: req.method
+      method: req.method,
+      statusCode: err.statusCode || 500
     });
   }
 

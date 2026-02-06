@@ -15,6 +15,7 @@ import { GapAnalysisResultSchema, type GapAnalysisResult } from '../schemas/anal
 import { analysisRepository } from '../repositories/analysis.repository.js';
 import { analysisCache } from '../cache/analysis.cache.js';
 import { generateContentHash } from '../utils/hash.js';
+import logger from '../utils/logger.js';
 
 const MAX_RETRIES = 3;
 
@@ -27,7 +28,7 @@ async function processAnalysisJob(
   const startTime = Date.now();
   const { analysisId, resumeText, jobDescription } = job.data;
   
-  console.log(`[Worker] Processing job ${job.id} for analysis ${analysisId}`);
+  logger.info('Processing analysis job', { jobId: job.id, analysisId });
 
   // Update status to PROCESSING
   await analysisRepository.updateStatus(analysisId, 'PROCESSING');
@@ -61,12 +62,12 @@ async function processAnalysisJob(
         break; // Success!
       } else {
         lastError = parseResult.error || 'Unknown validation error';
-        console.log(`[Worker] Attempt ${attempt} failed: ${lastError}`);
+        logger.warn('AI response validation failed', { jobId: job.id, attempt, error: lastError });
         await analysisRepository.incrementRetry(analysisId);
       }
     } catch (error) {
       lastError = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`[Worker] Attempt ${attempt} error:`, lastError);
+      logger.error('AI processing error', { jobId: job.id, attempt, error: lastError });
       await analysisRepository.incrementRetry(analysisId);
     }
   }
@@ -84,7 +85,7 @@ async function processAnalysisJob(
 
     await job.updateProgress(100);
 
-    console.log(`[Worker] Job ${job.id} completed in ${processingTimeMs}ms`);
+    logger.info('Job completed successfully', { jobId: job.id, processingTimeMs });
 
     return {
       success: true,
@@ -95,7 +96,7 @@ async function processAnalysisJob(
     // All retries exhausted
     await analysisRepository.updateError(analysisId, lastError, MAX_RETRIES);
 
-    console.error(`[Worker] Job ${job.id} failed after ${MAX_RETRIES} attempts`);
+    logger.error('Job failed after all retries', { jobId: job.id, attempts: MAX_RETRIES, error: lastError });
 
     return {
       success: false,
@@ -124,18 +125,18 @@ export function createAnalysisWorker(): Worker<AnalysisJobData, AnalysisJobResul
   );
 
   worker.on('completed', (job, result) => {
-    console.log(`[Worker] Job ${job.id} completed:`, result.success ? 'SUCCESS' : 'FAILED');
+    logger.info('Job completed', { jobId: job.id, success: result.success });
   });
 
   worker.on('failed', (job, error) => {
-    console.error(`[Worker] Job ${job?.id} failed:`, error.message);
+    logger.error('Job failed', { jobId: job?.id, error: error.message });
   });
 
   worker.on('error', (error) => {
-    console.error('[Worker] Worker error:', error);
+    logger.error('Worker error', { error: error.message });
   });
 
-  console.log('[Worker] Analysis worker started');
+  logger.info('Analysis worker started');
 
   return worker;
 }

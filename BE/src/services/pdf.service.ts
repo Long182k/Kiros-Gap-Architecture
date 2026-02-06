@@ -9,6 +9,7 @@ import { fromBuffer } from 'pdf2pic';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import logger from '../utils/logger.js';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_MIMETYPES = ['application/pdf'];
@@ -42,16 +43,16 @@ export class PDFService {
       const extractedText = this.cleanExtractedText(data.text || '');
       
       if (extractedText.length >= 50) {
-        console.log('📄 PDF text extracted directly');
+        logger.info('PDF text extracted directly', { textLength: extractedText.length });
         return extractedText;
       }
-      console.log('⚠️ Direct extraction returned insufficient text, trying OCR...');
+      logger.warn('Direct extraction returned insufficient text, trying OCR', { textLength: extractedText.length });
     } catch (error) {
-      console.log('⚠️ Direct text extraction failed, trying OCR...');
+      logger.warn('Direct text extraction failed, trying OCR', { error: (error as Error).message });
     }
 
     // Step 2: Fall back to OCR for image-based PDFs
-    console.log('🔍 Starting OCR extraction...');
+    logger.info('Starting OCR extraction');
     return this.extractTextWithOCR(buffer);
   }
 
@@ -80,13 +81,13 @@ export class PDFService {
       const allText: string[] = [];
       
       for (let pageNum = 1; pageNum <= pagesToProcess; pageNum++) {
-        console.log(`🔍 Processing page ${pageNum}...`);
+        logger.debug('Processing PDF page', { pageNum });
         
         try {
           const result = await converter(pageNum, { responseType: 'image' });
           
           if (!result.path) {
-            console.log(`   Page ${pageNum} not found, stopping`);
+            logger.debug('Page not found, stopping', { pageNum });
             break;
           }
           
@@ -94,7 +95,7 @@ export class PDFService {
           const ocrResult = await Tesseract.recognize(result.path, 'eng', {
             logger: (m) => {
               if (m.status === 'recognizing text' && m.progress > 0) {
-                console.log(`   OCR page ${pageNum}: ${Math.round(m.progress * 100)}%`);
+                logger.debug('OCR progress', { pageNum, progress: Math.round(m.progress * 100) });
               }
             }
           });
@@ -107,7 +108,7 @@ export class PDFService {
           }
         } catch (pageError) {
           // Page doesn't exist, we've processed all pages
-          console.log(`   Finished at page ${pageNum - 1}`);
+          logger.debug('Finished OCR at page', { lastPage: pageNum - 1 });
           break;
         }
       }
@@ -121,10 +122,10 @@ export class PDFService {
         );
       }
 
-      console.log('✅ OCR extraction successful');
+      logger.info('OCR extraction successful', { textLength: extractedText.length });
       return extractedText;
     } catch (error) {
-      console.error('OCR Error:', error);
+      logger.error('OCR Error', { error: (error as Error).message });
       if (error instanceof Error && error.message.includes('OCR could not')) {
         throw error;
       }

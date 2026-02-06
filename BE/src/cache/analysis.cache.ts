@@ -2,6 +2,7 @@
  * Redis Cache Service for Analysis Results
  */
 import Redis from 'ioredis';
+import logger from '../utils/logger.js';
 
 const CACHE_TTL = parseInt(process.env.CACHE_TTL_SECONDS || '86400', 10); // 24 hours default
 
@@ -19,7 +20,7 @@ class AnalysisCache {
     });
 
     this.redis.on('error', (err) => {
-      console.error('Redis connection error:', err);
+      logger.error('Redis connection error', { error: err.message });
     });
   }
 
@@ -35,7 +36,7 @@ class AnalysisCache {
       
       return JSON.parse(cached) as T;
     } catch (error) {
-      console.error('Cache get error:', error);
+      logger.error('Cache get error', { error: (error as Error).message, hash });
       return null;
     }
   }
@@ -50,7 +51,7 @@ class AnalysisCache {
       
       await this.redis.setex(key, ttl, JSON.stringify(data));
     } catch (error) {
-      console.error('Cache set error:', error);
+      logger.error('Cache set error', { error: (error as Error).message, hash });
     }
   }
 
@@ -62,7 +63,7 @@ class AnalysisCache {
       const key = this.keyPrefix + hash;
       await this.redis.del(key);
     } catch (error) {
-      console.error('Cache delete error:', error);
+      logger.error('Cache delete error', { error: (error as Error).message, hash });
     }
   }
 
@@ -75,7 +76,7 @@ class AnalysisCache {
       const result = await this.redis.exists(key);
       return result === 1;
     } catch (error) {
-      console.error('Cache exists error:', error);
+      logger.error('Cache exists error', { error: (error as Error).message, hash });
       return false;
     }
   }

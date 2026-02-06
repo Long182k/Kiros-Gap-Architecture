@@ -1,4 +1,5 @@
 import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
+import logger from '../utils/logger.js';
 
 const isSSL = process.env.DATABASE_URL?.includes('sslmode=require');
 
@@ -14,7 +15,7 @@ const pool = new Pool({
 });
 
 pool.on('error', (err) => {
-  console.error('Unexpected PostgreSQL pool error:', err);
+  logger.error('Unexpected PostgreSQL pool error', { error: err.message });
   process.exit(-1);
 });
 
@@ -27,7 +28,7 @@ export async function query<T extends QueryResultRow = QueryResultRow>(
   const duration = Date.now() - start;
   
   if (process.env.NODE_ENV === 'development') {
-    console.log('Executed query', { text, duration, rows: result.rowCount });
+    logger.debug('Executed query', { text: text.substring(0, 100), duration, rows: result.rowCount });
   }
   
   return result;
