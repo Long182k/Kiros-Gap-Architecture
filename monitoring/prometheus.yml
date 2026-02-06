@@ -12,19 +12,11 @@ scrape_configs:
   # Backend API metrics
   - job_name: 'backend'
     static_configs:
-      - targets: ['backend:3001']
+      - targets: ['gapanalyzer-backend:3001']
     metrics_path: '/api/v1/metrics'
-
-  # Docker daemon metrics (optional)
-  - job_name: 'docker'
-    static_configs:
-      - targets: ['host.docker.internal:9323']
-    relabel_configs:
-      - source_labels: [__address__]
-        target_label: instance
-        replacement: 'docker-host'
 
   # Traefik metrics
   - job_name: 'traefik'
     static_configs:
-      - targets: ['traefik:8080']
+      - targets: ['gapanalyzer-traefik:8080']
+    metrics_path: '/metrics'
