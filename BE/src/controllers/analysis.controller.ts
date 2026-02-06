@@ -9,7 +9,7 @@ import { uploadFiles, handleUploadError } from '../middleware/upload.js';
 import { analysisRateLimiter } from '../middleware/rate-limit.js';
 import { APIError, Errors } from '../middleware/error-handler.js';
 
-const router = Router();
+const router: Router = Router();
 
 /**
  * POST /api/v1/analysis
@@ -20,7 +20,7 @@ router.post(
   analysisRateLimiter,
   (req: Request, res: Response, next: NextFunction) => {
     // Handle multipart upload for both files
-    uploadFiles(req, res, (err) => {
+    uploadFiles(req, res, (err: any) => {
       if (err) {
         return next(handleUploadError(err));
       }

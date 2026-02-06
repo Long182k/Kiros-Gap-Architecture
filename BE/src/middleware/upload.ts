@@ -3,7 +3,7 @@
  * Configured for PDF uploads (resume and job description)
  */
 import multer from 'multer';
-import { Request } from 'express';
+import { Request, RequestHandler } from 'express';
 import { APIError } from './error-handler.js';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -36,7 +36,7 @@ const fileFilter = (
 /**
  * Multer instance configured for resume AND job description uploads
  */
-export const uploadFiles = multer({
+export const uploadFiles: RequestHandler = multer({
   storage,
   limits: {
     fileSize: MAX_FILE_SIZE,
@@ -51,7 +51,7 @@ export const uploadFiles = multer({
 /**
  * Legacy single file upload (deprecated, kept for backwards compatibility)
  */
-export const uploadResume = multer({
+export const uploadResume: RequestHandler = multer({
   storage,
   limits: {
     fileSize: MAX_FILE_SIZE,
