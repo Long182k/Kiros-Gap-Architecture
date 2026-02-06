@@ -8,6 +8,10 @@ datasources:
     url: http://gapanalyzer-prometheus:9090
     isDefault: true
     editable: false
+    jsonData:
+      prometheusType: Prometheus
+      prometheusVersion: 2.50.0
+      disableDeltaSelector: true
 
   - name: Loki
     type: loki
