@@ -134,12 +134,12 @@ jobs:
             # Cleanup old images
             docker image prune -f
             
-            # Health check with retries
+            # Health check with retries (using docker exec since ports aren't exposed to host)
             echo "⏳ Waiting for services to be healthy..."
             for i in 1 2 3 4 5; do
               echo "Health check attempt \$i/5..."
               sleep 15
-              if curl -sf http://localhost:3001/health > /dev/null 2>&1; then
+              if docker exec gapanalyzer-backend wget -q --spider http://localhost:3001/health 2>/dev/null; then
                 echo "✅ Backend is healthy!"
                 break
               fi
@@ -150,8 +150,8 @@ jobs:
               fi
             done
             
-            # Check frontend
-            if curl -sf http://localhost:3000/ > /dev/null 2>&1; then
+            # Check frontend through traefik
+            if curl -sf http://localhost:80/ > /dev/null 2>&1; then
               echo "✅ Frontend is healthy!"
             else
               echo "⚠️ Frontend may still be starting..."
