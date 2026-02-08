@@ -43,7 +43,7 @@ REPO_URL="https://github.com/Long182k/Kiros-Gap-Architecture.git"
 
 if [ -d ".git" ]; then
     echo "📥 Updating existing repository..."
-    git pull origin main
+    git pull origin master
 else
     echo "📥 Cloning repository..."
     git clone $REPO_URL .

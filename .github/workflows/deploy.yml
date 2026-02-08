@@ -5,7 +5,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 env:
@@ -45,7 +45,7 @@ jobs:
           images: ${{ env.BE_IMAGE }}
           tags: |
             type=sha,prefix=
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Build & Push Backend
         uses: docker/build-push-action@v5
@@ -64,7 +64,7 @@ jobs:
           images: ${{ env.FE_IMAGE }}
           tags: |
             type=sha,prefix=
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
 
       - name: Build & Push Frontend
         uses: docker/build-push-action@v5
@@ -83,7 +83,7 @@ jobs:
     name: Deploy to VPS
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
 
     steps:
       - name: Checkout
