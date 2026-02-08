@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'New Analysis', href: '/', icon: FileText },
-  { name: 'Analysis History', href: '/history', icon: History },
+  // { name: 'Analysis History', href: '/history', icon: History },
 ];
 
 export function AppSidebar() {
