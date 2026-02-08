@@ -139,7 +139,7 @@ jobs:
             for i in 1 2 3 4 5; do
               echo "Health check attempt \$i/5..."
               sleep 15
-              if curl -sf http://localhost:3001/api/v1/health > /dev/null 2>&1; then
+              if curl -sf http://localhost:3001/health > /dev/null 2>&1; then
                 echo "✅ Backend is healthy!"
                 break
               fi

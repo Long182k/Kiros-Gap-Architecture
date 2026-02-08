@@ -5,21 +5,9 @@
 services:
   frontend:
     image: ${FE_IMAGE:-ghcr.io/long182k/gapanalyzer-frontend:latest}
-    healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://localhost:3000 || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
   backend:
     image: ${BE_IMAGE:-ghcr.io/long182k/gapanalyzer-backend:latest}
-    healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://localhost:3001/api/v1/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
 
   worker:
     image: ${BE_IMAGE:-ghcr.io/long182k/gapanalyzer-backend:latest}
