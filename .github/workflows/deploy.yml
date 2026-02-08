@@ -10,8 +10,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  BE_IMAGE: ghcr.io/${{ github.repository_owner }}/gapanalyzer-backend
-  FE_IMAGE: ghcr.io/${{ github.repository_owner }}/gapanalyzer-frontend
+  BE_IMAGE: ghcr.io/long182k/gapanalyzer-backend
+  FE_IMAGE: ghcr.io/long182k/gapanalyzer-frontend
 
 jobs:
   # ============================================
