@@ -103,6 +103,8 @@ jobs:
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          DOMAIN: resume-gap-analysis.connected-social-media.online
+          ACME_EMAIL: ${{ secrets.ACME_EMAIL }}
         run: |
           # Copy docker-compose files
           scp docker-compose.yml $VPS_USER@$VPS_HOST:/opt/gapanalyzer/
@@ -118,6 +120,8 @@ jobs:
             # Set image environment variables
             export BE_IMAGE="${{ env.BE_IMAGE }}:latest"
             export FE_IMAGE="${{ env.FE_IMAGE }}:latest"
+            export DOMAIN="${{ env.DOMAIN }}"
+            export ACME_EMAIL="${{ env.ACME_EMAIL }}"
             
             # Login to GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
