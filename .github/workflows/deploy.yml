@@ -121,13 +121,13 @@ jobs:
             cd /opt/gapanalyzer
             
             # Set image environment variables
-            export BE_IMAGE="${{ env.BE_IMAGE }}:latest"
-            export FE_IMAGE="${{ env.FE_IMAGE }}:latest"
-            export DOMAIN="${{ env.DOMAIN }}"
-            export GRAFANA_DOMAIN="${{ env.GRAFANA_DOMAIN }}"
-            export TRAEFIK_DOMAIN="${{ env.TRAEFIK_DOMAIN }}"
-            export TRAEFIK_DASHBOARD_AUTH="${{ env.TRAEFIK_DASHBOARD_AUTH }}"
-            export ACME_EMAIL="${{ env.ACME_EMAIL }}"
+            export BE_IMAGE='${{ env.BE_IMAGE }}:latest'
+            export FE_IMAGE='${{ env.FE_IMAGE }}:latest'
+            export DOMAIN='${{ env.DOMAIN }}'
+            export GRAFANA_DOMAIN='${{ env.GRAFANA_DOMAIN }}'
+            export TRAEFIK_DOMAIN='${{ env.TRAEFIK_DOMAIN }}'
+            export TRAEFIK_DASHBOARD_AUTH='${{ env.TRAEFIK_DASHBOARD_AUTH }}'
+            export ACME_EMAIL='${{ env.ACME_EMAIL }}'
             
             # Login to GHCR
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
