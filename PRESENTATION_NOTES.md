@@ -1,58 +1,69 @@
-# 🎙️ GapAnalyzer Technical Presentation (5-7 Minutes)
-
-## 1. Introduction (30 Seconds)
-*   **Problem:** Job seekers often apply blindly without knowing exactly why they aren't getting interviews. "Gap Analysis" is tedious.
-*   **Solution:** **GapAnalyzer** is an AI-powered tool that acts as a technical career coach. It reads your Resume and the Job Description, then performs a deep semantic analysis to find missing skills and creates a learning plan.
-*   **Goal:** To build a **scalable, production-grade MVP** using modern TypeScript stack.
+# 🎬 GapAnalyzer Video Walkthrough Script (Loom, Max 5 Mins)
 
 ---
 
-## 2. Frontend Architecture (1.5 Minutes)
-*   **Tech:** **Next.js 16** (App Router), **Tailwind CSS 4**, **Typescript**.
-*   **Why Next.js?** For server-side rendering (SEO) and modern React features like Server Components.
-*   **UX Pattern:**
-    *   Since AI analysis takes time (10-30 seconds), we can't just wait for a standard HTTP request.
-    *   **Solution:** We use **Polling**. The frontend submits the file, gets a `jobId`, and then polls the status endpoint every 2 seconds until the result is ready.
-*   **UI Library:** **Shadcn/UI** (based on Radix Primitives) for accessible, high-quality components without the bloat of heavy 3rd party libraries.
+## 1. App Demo (2 Minutes)
+
+**[Screen: Open the live app at `https://resume-gap-analysis.connected-social-media.online`]**
+
+> "Hi, this is GapAnalyzer — an AI-powered tool that analyzes the gap between a resume and a job description."
+
+**[Action: Upload a sample PDF resume]**
+
+> "I'll upload my resume here..."
+
+**[Action: Paste a job description into the text area]**
+
+> "...and paste the target job description."
+
+**[Action: Click 'Analyze' and show the loading state]**
+
+> "Notice the loading indicator. The analysis takes about 10-20 seconds because we're doing heavy processing in the background — I'll explain how that works in a moment."
+
+**[Screen: Show the results page]**
+
+> "Here are the results:
+> - **Match Score**: Shows how well the resume fits the JD.
+> - **Missing Skills**: Categorized by importance (High, Medium, Low).
+> - **Learning Path**: Step-by-step recommendations.
+> - **Interview Questions**: AI-generated questions to prepare for."
 
 ---
 
-## 3. Backend Architecture (2 Minutes)
-*   **Tech:** **Node.js (Express)**, **PostgreSQL**, **Redis**.
-*   **Core Challenge:** Heavy AI processing (PDF parsing + LLM generation) blocks the main thread.
-*   **Solution: Event-Driven Architecture**
-    1.  **Controller:** Receives request, hashes content (SHA-256) to check **Cache** (Redis/DB). If cached, returns instantly.
-    2.  **Producer:** If new, pushes a job to **BullMQ (Redis Queue)**.
-    3.  **Worker:** A completely separate process picks up the job, extracts text from PDF, and calls **Google Gemini AI**.
-*   **Why this setup?**
-    *   **Scalability:** We can run 1 worker or 100 workers depending on load, without changing the API server.
-    *   **Reliability:** If the API crashes, the job is still in Redis. If Gemini fails, BullMQ handles retries automatically.
+## 2. Engineering Constraints Explained (2 Minutes)
+
+### How I Handled Background Processing
+
+> "A key challenge was handling heavy AI processing without blocking the main server."
+
+> "Here's how I solved it:
+> 1. When a user submits a resume, the **API Controller** doesn't call the AI directly.
+> 2. Instead, it pushes a **job to a Redis Queue** using **BullMQ**.
+> 3. A completely **separate Worker process** picks up the job, parses the PDF, calls **Google Gemini AI**, and saves the result.
+> 4. The frontend **polls** the status endpoint every 2 seconds until the result is ready."
+
+> "This architecture means I can scale workers independently. If traffic spikes, I just spin up more worker containers — the API server stays fast and responsive."
+
+### Caching Strategy
+
+> "I also implemented **content-based caching**. Before processing, I hash the resume + JD content using SHA-256. If the same combination was analyzed before, I return the cached result instantly from Redis — saving API costs and time."
 
 ---
 
-## 4. Infrastructure & Deployment (1.5 Minutes)
-*   **Strategy:** Dockerized Microservices on a VPS (Virtual Private Server).
-*   **Orchestration:** **Docker Compose**.
-    *   Services: `frontend`, `backend`, `worker`, `postgres`, `redis`, `traefik`.
-*   **Reverse Proxy: Traefik**
-    *   Acts as the entry point (Edge Router).
-    *   **Automated SSL:** Automatically handles Let's Encrypt certificates for HTTPS.
-    *   **Routing:** Routes `resume-gap...` to Frontend and `/api` to Backend.
-*   **CI/CD Pipeline (GitHub Actions):**
-    *   **Push-to-Deploy:** When we push to `master`, it builds Docker images, pushes to **GitHub Container Registry (GHCR)**, then SSHs into the VPS to pull and restart containers with **Zero Downtime**.
+## 3. AI Tooling & Workflow (1 Minute)
+
+> "Finally, I want to mention how AI coding assistants changed my workflow."
+
+> "I used **AI-assisted coding** (like Cursor/Windsurf/Gemini Code Assist) throughout this project. Here's a specific example:"
+
+> "**Bug I solved with AI**: The Traefik reverse proxy was returning 404 errors for my domain. After debugging, AI helped me realize the issue: my router was configured for HTTPS-only (`tls=true`), but Cloudflare was connecting via HTTP (Flexible SSL mode). AI suggested splitting the router configuration into separate HTTP and HTTPS routes — which fixed it immediately."
+
+> "Using AI didn't just speed things up — it helped me understand **why** things work, not just copy-paste solutions."
 
 ---
 
-## 5. Monitoring & Observability (1 Minute)
-*   **"You can't fix what you can't see."**
-*   **Stack:** **Grafana** (Dashboard), **Prometheus** (Metrics), **Loki** (Logs).
-*   **What we track:**
-    *   **API Latency:** How fast are requests?
-    *   **Queue Health:** How many jobs are waiting? (If queue grows, we add workers).
-    *   **Error Rates:** Alerting on 5xx errors.
+## 4. Closing
 
----
+> "That's GapAnalyzer. A scalable, production-ready MVP built with Next.js, Express, BullMQ, and Google Gemini — deployed with Docker and GitHub Actions CI/CD."
 
-## 6. Project Links
-*   **Live Demo:** `https://resume-gap-analysis.connected-social-media.online`
-*   **Documentation:** `README.md` in root (Documentation covers setup & architecture).
+> "Thanks for watching!"
