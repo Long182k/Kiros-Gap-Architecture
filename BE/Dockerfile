@@ -80,6 +80,8 @@ COPY --from=builder --chown=appuser:nodejs /app/package.json ./
 
 # Copy migration scripts
 COPY --chown=appuser:nodejs scripts ./scripts
+# Copy migration SQL files
+COPY --chown=appuser:nodejs src/db/migrations ./src/db/migrations
 
 USER appuser
 
