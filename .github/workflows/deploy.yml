@@ -106,6 +106,7 @@ jobs:
           DOMAIN: resume-gap-analysis.connected-social-media.online
           GRAFANA_DOMAIN: grafana-gap.connected-social-media.online
           TRAEFIK_DOMAIN: traefik-gap.connected-social-media.online
+          TRAEFIK_DASHBOARD_AUTH: ${{ secrets.TRAEFIK_DASHBOARD_AUTH }}
           ACME_EMAIL: ${{ secrets.ACME_EMAIL }}
         run: |
           # Copy docker-compose files
@@ -125,6 +126,7 @@ jobs:
             export DOMAIN="${{ env.DOMAIN }}"
             export GRAFANA_DOMAIN="${{ env.GRAFANA_DOMAIN }}"
             export TRAEFIK_DOMAIN="${{ env.TRAEFIK_DOMAIN }}"
+            export TRAEFIK_DASHBOARD_AUTH="${{ env.TRAEFIK_DASHBOARD_AUTH }}"
             export ACME_EMAIL="${{ env.ACME_EMAIL }}"
             
             # Login to GHCR
