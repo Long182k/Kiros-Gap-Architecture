@@ -104,6 +104,8 @@ jobs:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
           DOMAIN: resume-gap-analysis.connected-social-media.online
+          GRAFANA_DOMAIN: grafana-gap.connected-social-media.online
+          TRAEFIK_DOMAIN: traefik-gap.connected-social-media.online
           ACME_EMAIL: ${{ secrets.ACME_EMAIL }}
         run: |
           # Copy docker-compose files
@@ -121,6 +123,8 @@ jobs:
             export BE_IMAGE="${{ env.BE_IMAGE }}:latest"
             export FE_IMAGE="${{ env.FE_IMAGE }}:latest"
             export DOMAIN="${{ env.DOMAIN }}"
+            export GRAFANA_DOMAIN="${{ env.GRAFANA_DOMAIN }}"
+            export TRAEFIK_DOMAIN="${{ env.TRAEFIK_DOMAIN }}"
             export ACME_EMAIL="${{ env.ACME_EMAIL }}"
             
             # Login to GHCR
