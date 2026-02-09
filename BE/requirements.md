@@ -1,153 +1,96 @@
-Project Spec: Career Gap Architect (Backend)
-1. Context & Objective
-We are building the backend for "Career Gap Architect", an MVP that ingests a User's Resume and a Target Job Description (JD), utilizing Generative AI (Gemini) to perform a "Gap Analysis."
+# Backend Requirements: Career Gap Architect
 
-The system must identify missing skills, generate concrete learning steps, and create targeted interview questions. The architecture must be robust, scalable, and follow strict engineering constraints (Caching, Validation, Queues).
+## 1. Overview
+The backend provides APIs for analyzing the gap between a candidate's resume and a target job description. It utilizes **Google Gemini AI** for semantic analysis and **BullMQ** for asynchronous processing to handle heavy workloads efficiently.
 
-2. Technical Stack
-Runtime: Node.js (v20+)
+## 2. Technical Stack
+*   **Runtime:** Node.js (v20+)
+*   **Framework:** Express.js
+*   **Language:** TypeScript (Strict Mode)
+*   **Database:** PostgreSQL (via `pg` driver)
+*   **Queue System:** Redis (BullMQ)
+*   **AI Provider:** Google Gemini API (`gemini-1.5-flash` / `gemini-pro`)
+*   **File Processing:** `multer` (Uploads), `pdf-parse` (Text extraction), `pdf2pic` (OCR readiness)
+*   **Validation:** Zod
+*   **Logging:** Winston (JSON format for production)
 
-Framework: Express.js
+## 3. Architecture
+The system follows a modular 3-layer architecture:
 
-Language: TypeScript (Strict Mode)
+### A. API Layer (`src/controllers`)
+*   Handles HTTP requests & responses.
+*   Performs input validation using Zod schemas.
+*   Delegates business logic to Services.
+*   **No database access** directly in controllers.
 
-Database: PostgreSQL
+### B. Service Layer (`src/services`)
+*   Contains core business logic.
+*   Orchestrates AI calls, Queue interactions, and Caching strategies.
+*   Calls Repositories for data persistence.
 
-Caching/Queue: Redis (via BullMQ)
+### C. Repository Layer (`src/repositories`)
+*   Abstracts database interactions.
+*   Executes SQL queries via `pg` pool.
+*   Returns domain objects/DTOs.
 
-AI Provider: Google Gemini API
+### D. Worker Service (`src/workers`)
+*   Runs as a separate process (or thread).
+*   Consumes jobs from `analysis-queue`.
+*   Performs heavy PDF parsing and AI generation.
+*   Updates job status in Redis/DB.
 
-Validation: Zod
+## 4. Key Features & Logic
 
-Testing: Jest + Supertest (TDD Approach)
+### A. Semantic Gap Analysis
+*   **Endpoint:** `POST /api/v1/analysis`
+*   **Logic:**
+    1.  Accepts Resume (PDF/Text) and Job Description.
+    2.  Generates a **SHA-256 hash** of the content to check for existing results (Caching).
+    3.  If cached (Redis/DB), returns result immediately.
+    4.  If new, pushes a job to `analysis-queue` and returns `jobId`.
 
-3. Architecture Patterns
-Follow the Antigravity Backend Specialist guidelines. The code must be modularized into three distinct layers:
+### B. Asynchronous Processing
+*   **Queue:** `analysis-queue` (BullMQ)
+*   **Worker:**
+    1.  Extracts text from PDF (handling OCR if needed).
+    2.  Prompts Gemini AI with strict JSON output requirement.
+    3.  Validates AI response against `GapAnalysisResult` schema.
+    4.  Saves result to DB and Redis.
 
-Controller Layer (/controllers): Handles HTTP requests, validates DTOs using Zod, and sends responses. No business logic here.
-
-Service Layer (/services): Contains business logic, interacts with AI providers, handles Caching strategies, and orchestrates calls to the Repository.
-
-Repository Layer (/repositories): Direct abstraction over the ORM/Database. No complex logic, just data access.
-
-Additional Patterns
-Queue/Worker: Heavy AI computation must be offloaded to a background worker (BullMQ).
-
-Factory Pattern: For initializing the AI Provider (allow easy switching of models later, though Gemini is hardcoded for now).
-
-Dependency Injection: Ensure services are injectable for easier mocking in TDD.
-
-4. Core Features & Logic
-A. The "Semantic Diff" & Validation Engine
-Endpoint: POST /api/v1/analysis
-
-Input: Accepts JSON { resumeText: string, jobDescription: string }.
-
-Validation (Zod):
-
-Ensure inputs are strings and not empty.
-
-Sanitize inputs to prevent injection or excessive token usage.
-
-Hashed Caching (The "Gap Architect" Constraint):
-
-Generate a SHA-256 hash of resumeText + jobDescription.
-
-Check Redis: If key analysis:${hash} exists, return the cached JSON immediately.
-
-Check DB: If a record exists with this hash, return it.
-
-Queue Dispatch:
-
-If no cache, create a Job in analysisQueue.
-
-Return 202 Accepted with a jobId for polling (or 200 if we decide to await the worker for simplicity, but Queue is preferred for scalability).
-
-B. Background Worker (The AI Logic)
-Worker: AnalysisWorker
-
-AI Integration (Gemini):
-
-System Prompt: * "You are a senior technical career coach. Analyze the gap between the provided Resume and Job Description."*
-
-Output Enforcement: The AI must return strict JSON.
-
-The "Validation Layer" (Crucial):
-
-Parse the AI response.
-
-Validate against the Output Schema using Zod.
-
-Retry Logic: If Zod validation fails (malformed JSON or missing keys), the Worker should retry the AI call up to 3 times with a higher "temperature" or a correction prompt.
-
-Fallback: If all retries fail, mark the Job as Failed with a graceful error message.
-
-Persistence:
-
-Save valid results to PostgreSQL.
-
-Cache valid results to Redis (TTL: 24 hours).
-
-C. The Output Schema
-The AI output and API response must strictly adhere to:
-
-TypeScript
+### C. Result Schema
+The AI output strictly adheres to:
+```typescript
 interface GapAnalysisResult {
-  missingSkills: string[]; // e.g., ["Docker", "GraphQL"]
-  learningPath: {
-    step: string; // "Build a CRUD app..."
-    resource?: string;
-  }[];
-  interviewQuestions: string[]; // 3 targeted questions
-  status: 'COMPLETED' | 'FAILED';
+  matchScore: number;
+  missingSkills: Array<{
+    skill: string;
+    importance: "HIGH" | "MEDIUM" | "LOW";
+  }>;
+  learningPath: Array<{
+    step: string;
+    resource: string;
+    priority: "HIGH" | "MEDIUM" | "LOW";
+  }>;
+  interviewQuestions: string[];
 }
-5. Database Schema (Draft)
-users
-(Import standard Auth schema from existing auth folder reference)
+```
 
-analyses
-id: UUID (PK)
+## 5. Database Schema
+### `users` (If Auth enabled)
+*   Standard user credentials and profile.
 
-userId: UUID (FK)
+### `analyses`
+*   `id`: UUID (Primary Key)
+*   `contentHash`: String (Indexed, Unique) - For duplicate detection.
+*   `resumeText`: Text (Encrypted/Stored)
+*   `jobDescription`: Text
+*   `status`: Enum (`PENDING`, `COMPLETED`, `FAILED`)
+*   `result`: JSONB (Stores `GapAnalysisResult`)
+*   `createdAt`: Timestamp
 
-contentHash: String (Unique, Indexed) - For caching check
-
-resumeText: Text
-
-jobDescription: Text
-
-status: Enum (PENDING, COMPLETED, FAILED)
-
-result: JSONB (Stores the GapAnalysisResult)
-
-createdAt: Timestamp
-
-6. Testing Strategy (TDD)
-Write Tests First: Create analysis.service.spec.ts.
-
-Mocking:
-
-Mock GeminiClient to return both valid JSON and malformed JSON (to test the Validation Layer).
-
-Mock Redis to test the Caching hit/miss logic.
-
-Integration: Use Supertest to verify the POST /analysis endpoint creates a job/returns a result.
-
-7. Instructions for AI (Brainstorming)
-When running /brainstorm on this file, focus on:
-
-Edge Cases: How to handle PDF parsing if we move beyond text copy-paste?
-
-Prompt Engineering: Optimizing the Gemini prompt to ensure the "Steps" are actionable (not generic).
-
-Security: Rate limiting per user to prevent API cost spikes.
-
-Scalability: How to handle the Queue if 1000 users submit simultaneously.
-
-Action:
-
-Read src/auth (if available) and replicate the error handling middleware.
-
-Scaffold the project using the 3-layer architecture.
-
-Implement zod schemas first.
+## 6. Environment Variables
+*   `PORT`: Server port (default 3001)
+*   `DATABASE_URL`: PostgreSQL connection string
+*   `REDIS_URL`: Redis connection string
+*   `GEMINI_API_KEY`: Google AI Studio Key
+*   `CORS_ORIGIN`: Frontend URL
