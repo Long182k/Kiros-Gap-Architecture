@@ -3,12 +3,15 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   output: 'standalone',
   async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/:path*`,
-      },
-    ];
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return [
+        {
+          source: '/api/:path*',
+          destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
+        },
+      ];
+    }
+    return [];
   },
 };
 
