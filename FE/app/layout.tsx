@@ -1,21 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
-  title: "Resume Gap Analysis",
-  description: "AI-powered resume gap analysis tool",
+  title: "AI Gap Architecture — Skill Gap & Career Bridge Intelligence",
+  description: "AI-powered resume gap analysis, missing skill identification, and actionable career roadmap platform.",
 };
 
 export default function RootLayout({
@@ -24,10 +20,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${jakarta.variable} antialiased min-h-screen selection:bg-indigo-500/30 selection:text-indigo-200`}
       >
         <Providers>
           {children}
